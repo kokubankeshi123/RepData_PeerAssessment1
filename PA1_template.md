@@ -2,23 +2,26 @@
 
 
 ## Loading and preprocessing the data
-
+Load the data.
 
 ```r
 rawdata <- read.table(unz("activity.zip", "activity.csv"), header = TRUE, sep = ",")
 ```
 
-date columns have to be converted to data.
+Process/transform the data into a format suitable for the analysis.
 
 ```r
+# Change the date columns have to be converted to date.
 cleandata <- rawdata
 cleandata$date <- as.Date(cleandata$date)
 ```
 
 ## What is mean total number of steps taken per day?
-Before conducting analysis, I load the dplyr package. 
+
+In order to calculate the mean total number of daily steps, I created a dataset that consists of date and daily total steps.
 
 ```r
+# Load the dplyr package
 library(dplyr)
 ```
 
@@ -39,8 +42,6 @@ library(dplyr)
 ##     intersect, setdiff, setequal, union
 ```
 
-In order to calculate the mean total number of daily steps, I created a dataset that consists of date and daily total steps.
-
 ```r
 by_date <- group_by(cleandata, date)
 by_date_steps <- summarize(by_date, sum(steps))
@@ -56,6 +57,7 @@ hist(by_date_steps$totalsteps, main = paste("Histogram of total number of steps 
 
 
 ```r
+# The mean of the total number of steps taken per day
 mean_dailysteps <- mean(by_date_steps$totalsteps, na.rm = TRUE)
 mean_dailysteps
 ```
@@ -65,6 +67,7 @@ mean_dailysteps
 ```
 
 ```r
+# The median of the total number of steps taken per day
 median_dailysteps <- median(by_date_steps$totalsteps, na.rm = TRUE)
 median_dailysteps
 ```
@@ -72,8 +75,6 @@ median_dailysteps
 ```
 ## [1] 10765
 ```
-
-The mean of the total number of steps taken per day is 1.0766189\times 10^{4} and the median is 10765.
 
 ## What is the average daily activity pattern?
 
@@ -85,7 +86,7 @@ by_interval_steps <- rename(by_interval_steps, averagesteps = `mean(steps, na.rm
 plot(by_interval_steps, type = "l")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
 
 
 ```r
@@ -117,11 +118,48 @@ Taking into consideration that the dataset contains a large number of observatio
 
 
 ```r
+# Extract data with NAs and fill them with the mean for the interval
 nadata <- cleandata[is.na(cleandata),]
+nadata$steps <- by_interval_steps$averagesteps
+# Merge the dataset
+nonnadata <- na.omit(cleandata)
+filleddata <- rbind(nadata, nonnadata)
 ```
 
-I was not able to figure out how to fill NA with the mean values...
+I made a histogram of the total number of steps taken each day and calculated the mean and median total number of steps taken per day as follows.
+
+
+```r
+by_date2 <- group_by(filleddata, date)
+by_date_steps2 <- summarize(by_date2, sum(steps))
+by_date_steps2 <- rename(by_date_steps2, totalsteps = `sum(steps)`)
+
+hist(by_date_steps2$totalsteps, main = paste("Histogram of total number of steps taken each day (with NAs filled in)"), xlab = "Total number of steps taken each day")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
+
+
+```r
+# The mean of the total number of steps taken per day
+mean_dailysteps2 <- mean(by_date_steps2$totalsteps)
+mean_dailysteps2
+```
+
+```
+## [1] 10766.19
+```
+
+```r
+# The median of the total number of steps taken per day
+median_dailysteps2 <- median(by_date_steps2$totalsteps)
+median_dailysteps2
+```
+
+```
+## [1] 10766.19
+```
+
+The mean value remain the same as the first part of the assignment, but the median value became the same value as the mean value in the second analysis. Since the NAs are filled with the mean values of the interval, it wouldn't affect the mean value.
 
 ## Are there differences in activity patterns between weekdays and weekends?
-
-
